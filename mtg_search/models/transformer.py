@@ -212,6 +212,7 @@ def main():
         callbacks=callbacks,
         val_check_interval=250,
         num_sanity_val_steps=0,
+        gpus=args.gpus
     )
 
     trainer.fit(model, datamodule=datamodule)
