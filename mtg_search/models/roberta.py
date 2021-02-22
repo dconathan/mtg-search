@@ -7,17 +7,13 @@ import logging
 import torch
 from tqdm import tqdm
 
-from transformers.models.roberta import (
-    RobertaModel,
-    RobertaConfig,
-    RobertaTokenizerFast,
-)
 from pytorch_lightning import LightningModule, Trainer
 from pytorch_lightning.loggers import CometLogger
 from pytorch_lightning.callbacks import ModelCheckpoint
 from transformers.optimization import AdamW
 from transformers.tokenization_utils import BatchEncoding
 from tokenizers.implementations import ByteLevelBPETokenizer
+from transformers.models.bert import BertModel, BertTokenizerFast
 
 from mtg_search.data.classes import TrainBatch
 from mtg_search.data.modules import IRModule
@@ -71,7 +67,7 @@ class Input:
     c: BatchEncoding
 
     @classmethod
-    def from_batch(cls, batch: TrainBatch, tokenizer: RobertaTokenizerFast):
+    def from_batch(cls, batch: TrainBatch, tokenizer: BertTokenizerFast):
         q = tokenizer.batch_encode_plus(
             batch.queries,
             truncation=True,
@@ -92,21 +88,11 @@ class Input:
 class Model(LightningModule):
     def __init__(self):
         super().__init__()
-        self.tokenizer = RobertaTokenizerFast.from_pretrained(TOKENIZER_JSON.parent)
-        config = RobertaConfig(
-            pad_token_id=self.tokenizer.pad_token_id,
-            eos_token_id=self.tokenizer.eos_token_id,
-            bos_token_id=self.tokenizer.bos_token_id,
-            vocab_size=self.tokenizer.vocab_size,
-            num_hidden_layers=BaseConfig.num_hidden_layers,
-            num_attention_heads=BaseConfig.num_attention_heads,
-            hidden_size=BaseConfig.hidden_size,
-            intermediate_size=BaseConfig.intermediate_size,
-            max_position_embeddings=BaseConfig.max_position_embeddings,
-        )
+        base = "haisongzhang/roberta-tiny-cased"
+        self.tokenizer = BertTokenizerFast.from_pretrained(base)
 
-        self.q_encoder = RobertaModel(config)
-        self.c_encoder = RobertaModel(config)
+        self.q_encoder = BertModel.from_pretrained(base, num_hidden_layers=1)
+        self.c_encoder = BertModel.from_pretrained(base, num_hidden_layers=1)
 
     def create_index(self, contexts: List[str], batch_size=32) -> torch.Tensor:
         logger.info(f"creating index on {len(contexts)} contexts")
@@ -119,8 +105,7 @@ class Model(LightningModule):
                     truncation=True,
                     max_length=BaseConfig.max_position_embeddings - 1,
                 )
-                c = self.c_encoder(c).last_hidden_state
-                c = c[:, 0, :]
+                c = self.c_encoder(c).pooler_output
                 cs.append(c)
         return torch.cat(cs)
 
@@ -132,18 +117,13 @@ class Model(LightningModule):
                 truncation=True,
                 max_length=BaseConfig.max_position_embeddings - 1,
             )
-            q = self.q_encoder(q).last_hidden_state
-            q = q[:, 0, :]
+            q = self.q_encoder(q).pooler_output
         return q[0]
 
     def forward(self, batch: Input) -> Output:
 
-        q = self.q_encoder(**batch.q).last_hidden_state
-        c = self.c_encoder(**batch.c).last_hidden_state
-
-        # grab the embedding for `<s>` token
-        q = q[:, 0, :]
-        c = c[:, 0, :]
+        q = self.q_encoder(**batch.q).pooler_output
+        c = self.c_encoder(**batch.c).pooler_output
 
         return Output(q=q, c=c)
 
@@ -175,18 +155,10 @@ class Model(LightningModule):
 def main():
 
     datamodule = IRModule.load()
-    train_tokenizer(datamodule)
+    datamodule.batch_size = 2
+    # train_tokenizer(datamodule)
     # datamodule = datamodule.submodule(ratio=100)
     model = Model()
-
-    callbacks = [
-        ModelCheckpoint(
-            dirpath=MODELS_DIR,
-            save_top_k=1,
-            monitor="val_acc",
-            filename=MODEL_CHECKPOINT_PATH.stem,
-        )
-    ]
 
     comet_logger = CometLogger(
         api_key=os.environ.get("COMET_API_KEY"),
@@ -196,8 +168,24 @@ def main():
         log_env_details=False,
     )
 
+    key = comet_logger.experiment.get_key()
+
+    callbacks = [
+        ModelCheckpoint(
+            dirpath=MODELS_DIR,
+            save_top_k=1,
+            monitor="val_acc",
+            filename=key,
+        )
+    ]
+
     trainer = Trainer(
-        logger=comet_logger, max_epochs=100, callbacks=callbacks, val_check_interval=250
+        logger=comet_logger,
+        max_epochs=100,
+        callbacks=callbacks,
+        val_check_interval=250,
+        num_sanity_val_steps=0,
     )
+
     trainer.fit(model, datamodule=datamodule)
     trainer.test(model, datamodule=datamodule)

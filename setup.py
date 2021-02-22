@@ -12,14 +12,17 @@ setup(
         "torch",
         "rank-bm25",
         "pytorch-lightning",
+        "comet-ml",
+        "fastapi",
+        "pydantic",
     ],
     entry_points={
         "console_scripts": [
             "download-data=mtg_search.data.utils:download_data",
             "process-data=mtg_search.data.utils:process_data",
             "train=mtg_search.models.roberta:main",
-            "index=mtg_search.api:create_index",
-            "search=mtg_search.api:cli",
+            "index=mtg_search.app.api:create_index",
+            "search=mtg_search.app.api:cli",
         ],
     },
     package_data={
