@@ -233,7 +233,7 @@ def main():
         )
     ]
 
-    comet_logger.log_hyperparams(asdict(BaseConfig()))
+    comet_logger.log_hyperparams(asdict(model.config))
 
     trainer = Trainer.from_argparse_args(
         args,
