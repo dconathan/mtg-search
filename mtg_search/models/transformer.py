@@ -175,7 +175,7 @@ class Model(LightningModule):
 def main():
 
     parser = argparse.ArgumentParser()
-    Trainer.add_argparse_args(parser)
+    parser = Trainer.add_argparse_args(parser)
     parser.add_argument("--batch-size", type=int, default=2)
     parser.add_argument("--train-tokenizer", action="store_true")
 
