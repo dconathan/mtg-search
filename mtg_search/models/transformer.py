@@ -34,11 +34,17 @@ logger = logging.getLogger(__name__)
 
 @dataclass
 class BaseConfig:
+    name: str = "roberta-scratch"
     num_hidden_layers: int = 3
     num_attention_heads: int = 2
     hidden_size: int = 256
     intermediate_size: int = 256
     max_position_embeddings: int = 128
+
+
+@dataclass
+class PretrainedConfig:
+    name: str = "prajjwal1/bert-tiny"
 
 
 def train_tokenizer(datamodule: IRModule):
@@ -102,18 +108,36 @@ class Input:
 class Model(LightningModule):
     def __init__(self):
         super().__init__()
-        self.tokenizer = RobertaTokenizerFast.from_pretrained(TOKENIZER_JSON.parent)
+        # self.init_roberta()
+        self.init_tinybert()
 
+    def init_tinybert(self):
+
+        self.config = PretrainedConfig()
+        self.tokenizer = BertTokenizerFast.from_pretrained(self.config.name)
+        self.q_encoder = BertModel.from_pretrained(self.config.name)
+        self.c_encoder = BertModel.from_pretrained(self.config.name)
+
+    def init_roberta(self):
+        self.tokenizer = RobertaTokenizerFast.from_pretrained(TOKENIZER_JSON.parent)
         self.config = RobertaConfig(
-            num_hidden_layers=BaseConfig.num_hidden_layers,
-            num_attention_heads=BaseConfig.num_attention_heads,
-            hidden_size=BaseConfig.hidden_size,
-            intermediate_size=BaseConfig.intermediate_size,
-            vocab_size=self.tokenizer.vocab_size,
+                num_hidden_layers=BaseConfig.num_hidden_layers,
+                num_attention_heads=BaseConfig.num_attention_heads,
+                hidden_size=BaseConfig.hidden_size,
+                intermediate_size=BaseConfig.intermediate_size,
+                vocab_size=self.tokenizer.vocab_size,
         )
 
         self.q_encoder = RobertaModel(self.config)
         self.c_encoder = RobertaModel(self.config)
+
+    def pool(self, output):
+        if hasattr(output, "pooler_output"):
+            return output.pooler_output
+        if hasattr(output, "last_hidden_state"):
+            return output.last_hidden_state[:, 0, :]
+        else:
+            raise AttributeError(f"don't know how to pool output of type {type(output)}")
 
     def create_index(self, contexts: List[str], batch_size=32) -> torch.Tensor:
         logger.info(f"creating index on {len(contexts)} contexts")
@@ -126,7 +150,7 @@ class Model(LightningModule):
                     truncation=True,
                     max_length=BaseConfig.max_position_embeddings - 1,
                 )
-                c = self.c_encoder(c).last_hidden_state[:, 0, :]
+                c = self.pool(self.c_encoder(c))
                 cs.append(c)
         return torch.cat(cs)
 
@@ -138,15 +162,15 @@ class Model(LightningModule):
                 truncation=True,
                 max_length=BaseConfig.max_position_embeddings - 1,
             )
-            q = self.q_encoder(q).last_hidden_state[:, 0, :]
+            q = self.pool(self.q_encoder(q))
         return q[0]
 
     def forward(self, batch: Input) -> Output:
 
         batch.to(self.device)
 
-        q = self.q_encoder(**batch.q).last_hidden_state[:, 0, :]
-        c = self.c_encoder(**batch.c).last_hidden_state[:, 0, :]
+        q = self.pool(self.q_encoder(**batch.q))
+        c = self.pool(self.c_encoder(**batch.c))
 
         return Output(q=q, c=c)
 
