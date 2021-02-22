@@ -1,9 +1,11 @@
-from fastapi import FastApi
+from typing import List
+
+from fastapi import FastAPI
 from pydantic import BaseModel
 
 from mtg_search.app.api import search
 
-app = FastApi()
+app = FastAPI()
 
 
 class Card(BaseModel):

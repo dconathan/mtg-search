@@ -1,7 +1,6 @@
 from functools import lru_cache
 from typing import List
 import logging
-import argparse
 
 import torch
 
@@ -43,16 +42,3 @@ def create_index() -> Index:
     vectors = model.create_index([c.text for c in cards])
     index = Index(cards=cards, vectors=vectors)
     torch.save(index, INDEX)
-
-
-def cli():
-    parser = argparse.ArgumentParser()
-    parser.add_argument("query", nargs="*")
-    args = parser.parse_args()
-    query = " ".join(args.query)
-    logger.debug(f"query is: '{query}'")
-    cards = search(query)
-    print("top cards:\n")
-    for card in cards:
-        print(f"{card.name} - {card.text}")
-        print()
