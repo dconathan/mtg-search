@@ -33,10 +33,10 @@ logger = logging.getLogger(__name__)
 
 
 class BaseConfig:
-    num_hidden_layers = 2
+    num_hidden_layers = 3
     num_attention_heads = 2
-    hidden_size = 128
-    intermediate_size = 128
+    hidden_size = 256
+    intermediate_size = 256
     max_position_embeddings = 128
 
 
@@ -108,6 +108,7 @@ class Model(LightningModule):
             num_attention_heads=BaseConfig.num_attention_heads,
             hidden_size=BaseConfig.hidden_size,
             intermediate_size=BaseConfig.intermediate_size,
+            vocab_size=self.tokenizer.vocab_size,
         )
 
         self.q_encoder = RobertaModel(config)
@@ -207,13 +208,12 @@ def main():
         )
     ]
 
-    trainer = Trainer(
+    trainer = Trainer.from_argparse_args(
+        args,
         logger=comet_logger,
-        max_epochs=100,
         callbacks=callbacks,
-        val_check_interval=250,
         num_sanity_val_steps=0,
-        gpus=args.gpus,
+        val_check_interval=250,
     )
 
     trainer.fit(model, datamodule=datamodule)
