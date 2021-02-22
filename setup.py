@@ -1,5 +1,12 @@
 from setuptools import setup, find_packages
 from mtg_search.__version__ import __version__
+from mtg_search.constants import MODEL_CHECKPOINT_PATH, TOKENIZER_JSON, INDEX, PACKAGE_DIR
+from mtg_search import logger
+
+
+if not MODEL_CHECKPOINT_PATH.exists():
+    logger.warning(f"{MODEL_CHECKPOINT_PATH} not found, there won't be a model as part of this package")
+
 
 setup(
     name="mtg-search",
@@ -27,9 +34,9 @@ setup(
     },
     package_data={
         "mtg_search": [
-            "artifacts/data/index.torch",
-            "artifacts/models/tokenizer/*",
-            "artifacts/models/model.ckpt",
+            str(INDEX.relative_to(PACKAGE_DIR)),
+            str(TOKENIZER_JSON.relative_to(PACKAGE_DIR)),
+            str(MODEL_CHECKPOINT_PATH.relative_to(PACKAGE_DIR))
         ]
     },
 )

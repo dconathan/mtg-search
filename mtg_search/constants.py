@@ -1,4 +1,5 @@
 from pathlib import Path
+import os
 
 # local directories
 PACKAGE_DIR = Path(__file__).parent.absolute()
@@ -15,7 +16,9 @@ PREPROCESSED_DIR = DATA_DIR / "preprocessed"
 
 # model
 TOKENIZER_JSON = MODELS_DIR / "tokenizer.json"
-MODEL_CHECKPOINT_NAME = "model.ckpt"
+MODEL_CHECKPOINT_NAME = os.environ.get("MODEL_CHECKPOINT", "model.ckpt")
+if not MODEL_CHECKPOINT_NAME.endswith(".ckpt"):
+    MODEL_CHECKPOINT_NAME += ".ckpt"
 MODEL_CHECKPOINT_PATH = MODELS_DIR / MODEL_CHECKPOINT_NAME
 
 # runtime
