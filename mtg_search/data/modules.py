@@ -1,7 +1,11 @@
+from __future__ import annotations
 from typing import Optional, List
 import logging
 import pickle
+from tqdm import tqdm
 from multiprocessing import cpu_count
+from pathlib import Path
+from hashlib import md5
 
 from pytorch_lightning import LightningDataModule
 from rank_bm25 import BM25Okapi
@@ -9,7 +13,7 @@ from torch.utils.data import Dataset
 from torch.utils.data.dataloader import DataLoader
 
 from mtg_search.data.classes import Card, Cards, Sample, TrainSample, TrainBatch
-from mtg_search.constants import DATA_MODULE_PICKLE
+from mtg_search.constants import DATA_MODULE_PICKLE, PREPROCESSED_DIR
 
 import random
 
@@ -25,6 +29,9 @@ class IRModule(LightningDataModule):
         self.train = []
         self.test = []
         self.val = []
+        self._train_dataset = None
+        self._val_dataset = None
+        self._test_dataset = None
 
         # set seed so train/val/test split is consistent
         rng = random.Random(34608)
@@ -59,22 +66,31 @@ class IRModule(LightningDataModule):
     def setup(self, stage: Optional[str] = None):
         pass
 
-    def dataloder(self, samples: List[Sample]) -> DataLoader:
+    def dataloder(self, dataset: IRDataset) -> DataLoader:
         return DataLoader(
-            IRDataset(samples, self.corpus),
+            dataset,
             collate_fn=IRDataset.collate,
             batch_size=self.batch_size,
-            num_workers=cpu_count(),
+            num_workers=0,
         )
 
     def train_dataloader(self) -> DataLoader:
-        return self.dataloder(self.train)
+        self._train_dataset = self._train_dataset or IRDataset(self.train, self.corpus)
+        if not self._train_dataset.preprocessed:
+            self._train_dataset.preprocess()
+        return self.dataloder(self._train_dataset)
 
     def test_dataloader(self) -> DataLoader:
-        return self.dataloder(self.test)
+        self._test_dataset = self._test_dataset or IRDataset(self.test, self.corpus)
+        if not self._test_dataset.preprocessed:
+            self._test_dataset.preprocesse()
+        return self.dataloder(self._test_dataset)
 
     def val_dataloader(self) -> DataLoader:
-        return self.dataloder(self.val)
+        self._val_dataset = self._val_dataset or IRDataset(self.val, self.corpus)
+        if not self._val_dataset.preprocessed:
+            self._val_dataset.preprocess()
+        return self.dataloder(self._val_dataset)
 
     @classmethod
     def load(cls):
@@ -98,6 +114,7 @@ class IRDataset(Dataset):
         TODO docstring
         """
         self.samples = samples
+        self._samples = []
         self.corpus = corpus
         self.index = BM25Okapi(corpus)
         if neg_sampling < 2:
@@ -107,7 +124,36 @@ class IRDataset(Dataset):
             neg_sampling = 2
         self.neg_sampling = neg_sampling
 
+    @property
+    def preprocessed_filename(self) -> Path:
+        uid = md5(
+            (str(self.samples) + str(self.corpus) + str(self.neg_sampling)).encode()
+        ).hexdigest()
+        return PREPROCESSED_DIR / uid
+
+    @property
+    def preprocessed(self):
+        return len(self) == len(self._samples)
+
+    def preprocess(self):
+        preprocessed_filename = self.preprocessed_filename
+        if preprocessed_filename.exists():
+            with preprocessed_filename.open("rb") as f:
+                self._samples = pickle.load(f)
+            return
+        logger.info(f"preprocessing {len(self)} train samples")
+        dataloader = DataLoader(self, num_workers=cpu_count(), batch_size=None)
+        for sample in tqdm(iter(dataloader), total=len(self)):
+            self._samples.append(sample)
+        PREPROCESSED_DIR.mkdir(exist_ok=True, parents=True)
+        with self.preprocessed_filename.open("wb") as f:
+            pickle.dump(self._samples, f)
+
     def __getitem__(self, item):
+
+        if self.preprocessed:
+            return self._samples[item]
+
         sample = self.samples[item]
 
         # we sample adversarial samples (similar contexts) for half our negatives

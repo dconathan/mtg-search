@@ -11,6 +11,7 @@ DATA_URL = "https://mtgjson.com/api/v5/AllPrintings.json"
 RAW_DATA_JSON = DATA_DIR / "AllPrintings.json"
 PROCESSED_DATA_PICKLE = DATA_DIR / "cards.pickle"
 DATA_MODULE_PICKLE = DATA_DIR / "module.pickle"
+PREPROCESSED_DIR = DATA_DIR / "preprocessed"
 
 # model
 TOKENIZER_JSON = MODELS_DIR / "tokenizer.json"

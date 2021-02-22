@@ -197,6 +197,7 @@ def main():
         log_graph=False,
         log_code=False,
         log_env_details=False,
+        disabled=True,
     )
 
     key = comet_logger.experiment.get_key()
@@ -213,7 +214,7 @@ def main():
         callbacks=callbacks,
         val_check_interval=250,
         num_sanity_val_steps=0,
-        gpus=args.gpus
+        gpus=args.gpus,
     )
 
     trainer.fit(model, datamodule=datamodule)
