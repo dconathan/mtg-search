@@ -83,7 +83,7 @@ class IRModule(LightningDataModule):
     def test_dataloader(self) -> DataLoader:
         self._test_dataset = self._test_dataset or IRDataset(self.test, self.corpus)
         if not self._test_dataset.preprocessed:
-            self._test_dataset.preprocesse()
+            self._test_dataset.preprocess()
         return self.dataloder(self._test_dataset)
 
     def val_dataloader(self) -> DataLoader:
