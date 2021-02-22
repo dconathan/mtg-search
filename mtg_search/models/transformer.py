@@ -120,7 +120,10 @@ class Model(LightningModule):
 
     def init_roberta(self):
         self.tokenizer = RobertaTokenizerFast.from_pretrained(TOKENIZER_JSON.parent)
-        self.config = RobertaConfig(
+
+        self.config = BaseConfig()
+
+        config = RobertaConfig(
             num_hidden_layers=BaseConfig.num_hidden_layers,
             num_attention_heads=BaseConfig.num_attention_heads,
             hidden_size=BaseConfig.hidden_size,
@@ -128,8 +131,8 @@ class Model(LightningModule):
             vocab_size=self.tokenizer.vocab_size,
         )
 
-        self.q_encoder = RobertaModel(self.config)
-        self.c_encoder = RobertaModel(self.config)
+        self.q_encoder = RobertaModel(config)
+        self.c_encoder = RobertaModel(config)
 
     def pool(self, output):
         if hasattr(output, "pooler_output"):
