@@ -7,7 +7,7 @@ import torch
 
 from mtg_search.constants import MODEL_CHECKPOINT_PATH, INDEX
 from mtg_search.data.classes import Cards, Card, Index
-from mtg_search.models.roberta import Model
+from mtg_search.models.transformer import Model
 
 
 logger = logging.getLogger(__name__)
