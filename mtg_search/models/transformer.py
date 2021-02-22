@@ -35,10 +35,10 @@ logger = logging.getLogger(__name__)
 @dataclass
 class BaseConfig:
     name: str = "roberta-scratch"
-    num_hidden_layers: int = 3
+    num_hidden_layers: int = 2
     num_attention_heads: int = 2
     hidden_size: int = 256
-    intermediate_size: int = 256
+    intermediate_size: int = 512
     max_position_embeddings: int = 128
 
 
@@ -108,8 +108,8 @@ class Input:
 class Model(LightningModule):
     def __init__(self):
         super().__init__()
-        # self.init_roberta()
-        self.init_tinybert()
+        self.init_roberta()
+        # self.init_tinybert()
 
     def init_tinybert(self):
 
@@ -121,11 +121,11 @@ class Model(LightningModule):
     def init_roberta(self):
         self.tokenizer = RobertaTokenizerFast.from_pretrained(TOKENIZER_JSON.parent)
         self.config = RobertaConfig(
-                num_hidden_layers=BaseConfig.num_hidden_layers,
-                num_attention_heads=BaseConfig.num_attention_heads,
-                hidden_size=BaseConfig.hidden_size,
-                intermediate_size=BaseConfig.intermediate_size,
-                vocab_size=self.tokenizer.vocab_size,
+            num_hidden_layers=BaseConfig.num_hidden_layers,
+            num_attention_heads=BaseConfig.num_attention_heads,
+            hidden_size=BaseConfig.hidden_size,
+            intermediate_size=BaseConfig.intermediate_size,
+            vocab_size=self.tokenizer.vocab_size,
         )
 
         self.q_encoder = RobertaModel(self.config)
@@ -137,7 +137,9 @@ class Model(LightningModule):
         if hasattr(output, "last_hidden_state"):
             return output.last_hidden_state[:, 0, :]
         else:
-            raise AttributeError(f"don't know how to pool output of type {type(output)}")
+            raise AttributeError(
+                f"don't know how to pool output of type {type(output)}"
+            )
 
     def create_index(self, contexts: List[str], batch_size=32) -> torch.Tensor:
         logger.info(f"creating index on {len(contexts)} contexts")

@@ -33,7 +33,7 @@ def search(query: str, top=10) -> List[Card]:
     q = model.embed_query(query)
     index = load_index()
     scores = torch.matmul(q, torch.transpose(index.vectors, 0, 1))
-    best = scores.argsort()[:top]
+    best = scores.argsort(descending=True)[:top]
     return [index.cards[i] for i in best]
 
 
