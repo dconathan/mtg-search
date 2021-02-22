@@ -142,7 +142,9 @@ class IRDataset(Dataset):
             with preprocessed_filename.open("rb") as f:
                 self._samples = pickle.load(f)
             return
-        logger.info(f"{preprocessed_filename} doesn't exist, preprocessing {len(self)} train samples")
+        logger.info(
+            f"{preprocessed_filename} doesn't exist, preprocessing {len(self)} train samples"
+        )
         dataloader = DataLoader(self, num_workers=cpu_count(), batch_size=None)
         for sample in tqdm(iter(dataloader), total=len(self)):
             self._samples.append(sample)

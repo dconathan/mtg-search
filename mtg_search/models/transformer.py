@@ -197,7 +197,6 @@ def main():
         log_graph=False,
         log_code=False,
         log_env_details=False,
-        disabled=True,
     )
 
     key = comet_logger.experiment.get_key()
