@@ -3,17 +3,23 @@ from dataclasses import dataclass
 import os
 from typing import List
 import logging
+import argparse
 
 import torch
 from tqdm import tqdm
-
 from pytorch_lightning import LightningModule, Trainer
 from pytorch_lightning.loggers import CometLogger
 from pytorch_lightning.callbacks import ModelCheckpoint
+
 from transformers.optimization import AdamW
 from transformers.tokenization_utils import BatchEncoding
-from tokenizers.implementations import ByteLevelBPETokenizer
 from transformers.models.bert import BertModel, BertTokenizerFast
+from transformers.models.roberta import (
+    RobertaModel,
+    RobertaTokenizerFast,
+    RobertaConfig,
+)
+from tokenizers.implementations import ByteLevelBPETokenizer
 
 from mtg_search.data.classes import TrainBatch
 from mtg_search.data.modules import IRModule
@@ -27,8 +33,8 @@ logger = logging.getLogger(__name__)
 
 
 class BaseConfig:
-    num_hidden_layers = 1
-    num_attention_heads = 1
+    num_hidden_layers = 2
+    num_attention_heads = 2
     hidden_size = 128
     intermediate_size = 128
     max_position_embeddings = 128
@@ -84,15 +90,27 @@ class Input:
         )
         return cls(q, c)
 
+    def to(self, *args, **kwargs):
+        # for device, etc.
+        self.q.to(*args, **kwargs)
+        self.c.to(*args, **kwargs)
+        return self
+
 
 class Model(LightningModule):
     def __init__(self):
         super().__init__()
-        base = "haisongzhang/roberta-tiny-cased"
-        self.tokenizer = BertTokenizerFast.from_pretrained(base)
+        self.tokenizer = RobertaTokenizerFast.from_pretrained(TOKENIZER_JSON.parent)
 
-        self.q_encoder = BertModel.from_pretrained(base, num_hidden_layers=1)
-        self.c_encoder = BertModel.from_pretrained(base, num_hidden_layers=1)
+        config = RobertaConfig(
+            num_hidden_layers=BaseConfig.num_hidden_layers,
+            num_attention_heads=BaseConfig.num_attention_heads,
+            hidden_size=BaseConfig.hidden_size,
+            intermediate_size=BaseConfig.intermediate_size,
+        )
+
+        self.q_encoder = RobertaModel(config)
+        self.c_encoder = RobertaModel(config)
 
     def create_index(self, contexts: List[str], batch_size=32) -> torch.Tensor:
         logger.info(f"creating index on {len(contexts)} contexts")
@@ -105,7 +123,7 @@ class Model(LightningModule):
                     truncation=True,
                     max_length=BaseConfig.max_position_embeddings - 1,
                 )
-                c = self.c_encoder(c).pooler_output
+                c = self.c_encoder(c).last_hidden_state[:, 0, :]
                 cs.append(c)
         return torch.cat(cs)
 
@@ -117,13 +135,15 @@ class Model(LightningModule):
                 truncation=True,
                 max_length=BaseConfig.max_position_embeddings - 1,
             )
-            q = self.q_encoder(q).pooler_output
+            q = self.q_encoder(q).last_hidden_state[:, 0, :]
         return q[0]
 
     def forward(self, batch: Input) -> Output:
 
-        q = self.q_encoder(**batch.q).pooler_output
-        c = self.c_encoder(**batch.c).pooler_output
+        batch.to(self.device)
+
+        q = self.q_encoder(**batch.q).last_hidden_state[:, 0, :]
+        c = self.c_encoder(**batch.c).last_hidden_state[:, 0, :]
 
         return Output(q=q, c=c)
 
@@ -154,10 +174,20 @@ class Model(LightningModule):
 
 def main():
 
+    parser = argparse.ArgumentParser()
+    Trainer.add_argparse_args(parser)
+    parser.add_argument("--batch-size", type=int, default=2)
+    parser.add_argument("--train-tokenizer", action="store_true")
+
+    args = parser.parse_args()
+
     datamodule = IRModule.load()
-    datamodule.batch_size = 2
-    # train_tokenizer(datamodule)
+    datamodule.batch_size = args.batch_size
+
+    if args.train_tokenizer:
+        train_tokenizer(datamodule)
     # datamodule = datamodule.submodule(ratio=100)
+
     model = Model()
 
     comet_logger = CometLogger(
@@ -172,10 +202,7 @@ def main():
 
     callbacks = [
         ModelCheckpoint(
-            dirpath=MODELS_DIR,
-            save_top_k=1,
-            monitor="val_acc",
-            filename=key,
+            dirpath=MODELS_DIR, save_top_k=1, monitor="val_acc", filename=key,
         )
     ]
 

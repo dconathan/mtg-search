@@ -21,7 +21,7 @@ logger = logging.getLogger(__name__)
 def download_data():
     logger.info(f"downloading data from {DATA_URL} to {RAW_DATA_JSON}")
 
-    RAW_DATA_JSON.parent.mkdirs(exist_ok=True)
+    RAW_DATA_JSON.parent.mkdir(exist_ok=True, parents=True)
 
     with RAW_DATA_JSON.open("w") as f, requests.get(DATA_URL, stream=True) as response:
         for buffer in response.iter_content(512, decode_unicode=True):

@@ -20,7 +20,7 @@ setup(
         "console_scripts": [
             "download-data=mtg_search.data.utils:download_data",
             "process-data=mtg_search.data.utils:process_data",
-            "train=mtg_search.models.roberta:main",
+            "train=mtg_search.models.transformer:main",
             "index=mtg_search.app.api:create_index",
             "search=mtg_search.app.api:cli",
         ],
