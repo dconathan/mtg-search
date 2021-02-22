@@ -64,6 +64,7 @@ class Output:
 
     def acc(self):
         preds = torch.matmul(self.q, torch.transpose(self.c, 0, 1)).argmax(dim=1)
+        preds = preds.detach().to("cpu")
         return (preds == torch.arange(len(self))).to(torch.float).mean()
 
 
