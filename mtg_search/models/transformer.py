@@ -1,5 +1,5 @@
 import comet_ml
-from dataclasses import dataclass
+from dataclasses import dataclass, asdict
 import os
 from typing import List
 import logging
@@ -32,12 +32,13 @@ loss_fn = BiEncoderNllLoss()
 logger = logging.getLogger(__name__)
 
 
+@dataclass
 class BaseConfig:
-    num_hidden_layers = 3
-    num_attention_heads = 2
-    hidden_size = 256
-    intermediate_size = 256
-    max_position_embeddings = 128
+    num_hidden_layers: int = 3
+    num_attention_heads: int = 2
+    hidden_size: int = 256
+    intermediate_size: int = 256
+    max_position_embeddings: int = 128
 
 
 def train_tokenizer(datamodule: IRModule):
@@ -103,7 +104,7 @@ class Model(LightningModule):
         super().__init__()
         self.tokenizer = RobertaTokenizerFast.from_pretrained(TOKENIZER_JSON.parent)
 
-        config = RobertaConfig(
+        self.config = RobertaConfig(
             num_hidden_layers=BaseConfig.num_hidden_layers,
             num_attention_heads=BaseConfig.num_attention_heads,
             hidden_size=BaseConfig.hidden_size,
@@ -111,8 +112,8 @@ class Model(LightningModule):
             vocab_size=self.tokenizer.vocab_size,
         )
 
-        self.q_encoder = RobertaModel(config)
-        self.c_encoder = RobertaModel(config)
+        self.q_encoder = RobertaModel(self.config)
+        self.c_encoder = RobertaModel(self.config)
 
     def create_index(self, contexts: List[str], batch_size=32) -> torch.Tensor:
         logger.info(f"creating index on {len(contexts)} contexts")
@@ -207,6 +208,8 @@ def main():
             dirpath=MODELS_DIR, save_top_k=1, monitor="val_acc", filename=key,
         )
     ]
+
+    comet_logger.log_hyperparams(asdict(BaseConfig()))
 
     trainer = Trainer.from_argparse_args(
         args,
