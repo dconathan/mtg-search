@@ -137,6 +137,7 @@ class IRDataset(Dataset):
 
     def preprocess(self):
         preprocessed_filename = self.preprocessed_filename
+        logger.info(f"checking if preprocessed file {preprocessed_filename} exists")
         if preprocessed_filename.exists():
             with preprocessed_filename.open("rb") as f:
                 self._samples = pickle.load(f)
