@@ -64,7 +64,17 @@ class IRModule(LightningDataModule):
         pass
 
     def setup(self, stage: Optional[str] = None):
-        pass
+        if stage == "fit":
+            self._train_dataset = IRDataset(self.train, self.corpus)
+            self._val_dataset = IRDataset(self.val, self.corpus)
+            if not self._train_dataset.preprocessed:
+                self._train_dataset.preprocess()
+            if not self._val_dataset.preprocessed:
+                self._val_dataset.preprocess()
+        elif stage == "test":
+            self._test_dataset = IRDataset(self.test, self.corpus)
+            if not self._test_dataset.preprocessed:
+                self._test_dataset.preprocess()
 
     def dataloder(self, dataset: IRDataset) -> DataLoader:
         return DataLoader(
@@ -75,21 +85,12 @@ class IRModule(LightningDataModule):
         )
 
     def train_dataloader(self) -> DataLoader:
-        self._train_dataset = self._train_dataset or IRDataset(self.train, self.corpus)
-        if not self._train_dataset.preprocessed:
-            self._train_dataset.preprocess()
         return self.dataloder(self._train_dataset)
 
     def test_dataloader(self) -> DataLoader:
-        self._test_dataset = self._test_dataset or IRDataset(self.test, self.corpus)
-        if not self._test_dataset.preprocessed:
-            self._test_dataset.preprocess()
         return self.dataloder(self._test_dataset)
 
     def val_dataloader(self) -> DataLoader:
-        self._val_dataset = self._val_dataset or IRDataset(self.val, self.corpus)
-        if not self._val_dataset.preprocessed:
-            self._val_dataset.preprocess()
         return self.dataloder(self._val_dataset)
 
     @classmethod
@@ -129,7 +130,7 @@ class IRDataset(Dataset):
         uid = md5(
             (str(self.samples) + str(self.corpus) + str(self.neg_sampling)).encode()
         ).hexdigest()
-        return PREPROCESSED_DIR / uid
+        return PREPROCESSED_DIR / f"{uid}.pickle"
 
     @property
     def preprocessed(self):
