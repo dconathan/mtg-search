@@ -1,6 +1,9 @@
 import argparse
+import logging
 
-from mtg_search.app.api import logger, search
+from mtg_search.api.main import search
+
+logger = logging.getLogger(__name__)
 
 
 def cli():

@@ -1,10 +1,12 @@
-import comet_ml
 from dataclasses import dataclass, asdict
 import os
 from typing import List
 import logging
 import argparse
+import json
+from pathlib import Path
 
+import comet_ml
 import torch
 from tqdm import tqdm
 from pytorch_lightning import LightningModule, Trainer
@@ -14,17 +16,11 @@ from pytorch_lightning.callbacks import ModelCheckpoint
 from transformers.optimization import AdamW
 from transformers.tokenization_utils import BatchEncoding
 from transformers.models.bert import BertModel, BertTokenizerFast
-from transformers.models.roberta import (
-    RobertaModel,
-    RobertaTokenizerFast,
-    RobertaConfig,
-)
-from tokenizers.implementations import ByteLevelBPETokenizer
 
 from mtg_search.data.classes import TrainBatch
 from mtg_search.data.modules import IRModule
 from mtg_search.models.loss import BiEncoderNllLoss
-from mtg_search.constants import TOKENIZER_JSON, MODELS_DIR, MODEL_CHECKPOINT_PATH
+from mtg_search.constants import MODELS_DIR
 
 
 loss_fn = BiEncoderNllLoss()
@@ -33,29 +29,9 @@ logger = logging.getLogger(__name__)
 
 
 @dataclass
-class BaseConfig:
-    name: str = "roberta-scratch"
-    num_hidden_layers: int = 2
-    num_attention_heads: int = 2
-    hidden_size: int = 256
-    intermediate_size: int = 512
-    max_position_embeddings: int = 128
-
-
-@dataclass
-class PretrainedConfig:
+class TinyBertConfig:
     name: str = "prajjwal1/bert-tiny"
-
-
-def train_tokenizer(datamodule: IRModule):
-    tokenizer = ByteLevelBPETokenizer(lowercase=True)
-    tokenizer.train_from_iterator(
-        datamodule.all_text,
-        vocab_size=5000,
-        special_tokens=["<pad>", "<s>", "</s>", "<unk>", "<mask>"],
-    )
-    TOKENIZER_JSON.parent.mkdir(exist_ok=True)
-    tokenizer.save(str(TOKENIZER_JSON))
+    key: str = None
 
 
 @dataclass
@@ -87,14 +63,12 @@ class Input:
             truncation=True,
             padding=True,
             return_tensors="pt",
-            max_length=BaseConfig.max_position_embeddings - 1,
         )
         c = tokenizer.batch_encode_plus(
             batch.contexts,
             truncation=True,
             padding=True,
             return_tensors="pt",
-            max_length=BaseConfig.max_position_embeddings - 1,
         )
         return cls(q, c)
 
@@ -106,35 +80,48 @@ class Input:
 
 
 class Model(LightningModule):
-    def __init__(self):
+    def __init__(self, config, tokenizer, q_encoder, c_encoder):
         super().__init__()
-        # self.init_roberta()
-        self.init_tinybert()
+        self.config = config
+        self.tokenizer = tokenizer
+        self.q_encoder = q_encoder
+        self.c_encoder = c_encoder
 
-    def init_tinybert(self):
+    @classmethod
+    def from_tinybert(cls):
+        config = TinyBertConfig()
+        tokenizer = BertTokenizerFast.from_pretrained(config.name)
+        q_encoder = BertModel.from_pretrained(config.name)
+        c_encoder = BertModel.from_pretrained(config.name)
+        return cls(config, tokenizer, q_encoder, c_encoder)
 
-        self.config = PretrainedConfig()
-        self.tokenizer = BertTokenizerFast.from_pretrained(self.config.name)
-        self.q_encoder = BertModel.from_pretrained(self.config.name)
-        self.c_encoder = BertModel.from_pretrained(self.config.name)
+    def on_save_checkpoint(self, *args, **kwargs) -> None:
+        if not self.config.key:
+            return
+        checkpoint_dir = MODELS_DIR / self.config.key
+        checkpoint_dir.mkdir(exist_ok=True, parents=True)
+        torch.save(self.config, checkpoint_dir / "config.torch")
+        torch.save(self.tokenizer, checkpoint_dir / "tokenizer.torch")
+        torch.save(self.q_encoder, checkpoint_dir / "q_encoder.torch")
+        torch.save(self.c_encoder, checkpoint_dir / "c_encoder.torch")
 
-    def init_roberta(self):
-        self.tokenizer = RobertaTokenizerFast.from_pretrained(TOKENIZER_JSON.parent)
+    @classmethod
+    def from_checkpoint_dir(cls, path, q_only=False, c_only=False):
+        path = Path(path)
+        config = torch.load(path / "config.torch")
+        tokenizer = torch.load(path / "tokenizer.torch")
+        if c_only:
+            q_encoder = None
+        else:
+            q_encoder = torch.load(path / "q_encoder.torch")
+        if q_only:
+            c_encoder = None
+        else:
+            c_encoder = torch.load(path / "c_encoder.torch")
+        return cls(config, tokenizer, q_encoder, c_encoder)
 
-        self.config = BaseConfig()
-
-        config = RobertaConfig(
-            num_hidden_layers=BaseConfig.num_hidden_layers,
-            num_attention_heads=BaseConfig.num_attention_heads,
-            hidden_size=BaseConfig.hidden_size,
-            intermediate_size=BaseConfig.intermediate_size,
-            vocab_size=self.tokenizer.vocab_size,
-        )
-
-        self.q_encoder = RobertaModel(config)
-        self.c_encoder = RobertaModel(config)
-
-    def pool(self, output):
+    @staticmethod
+    def pool(output):
         if hasattr(output, "pooler_output"):
             return output.pooler_output
         if hasattr(output, "last_hidden_state"):
@@ -144,7 +131,7 @@ class Model(LightningModule):
                 f"don't know how to pool output of type {type(output)}"
             )
 
-    def create_index(self, contexts: List[str], batch_size=32) -> torch.Tensor:
+    def create_index(self, contexts: List[str]) -> torch.Tensor:
         logger.info(f"creating index on {len(contexts)} contexts")
         cs = []
         with torch.no_grad():
@@ -153,7 +140,6 @@ class Model(LightningModule):
                     c,
                     return_tensors="pt",
                     truncation=True,
-                    max_length=BaseConfig.max_position_embeddings - 1,
                 )
                 c = self.pool(self.c_encoder(c))
                 cs.append(c)
@@ -165,7 +151,6 @@ class Model(LightningModule):
                 q,
                 return_tensors="pt",
                 truncation=True,
-                max_length=BaseConfig.max_position_embeddings - 1,
             )
             q = self.pool(self.q_encoder(q))
         return q[0]
@@ -209,18 +194,15 @@ def main():
     parser = argparse.ArgumentParser()
     parser = Trainer.add_argparse_args(parser)
     parser.add_argument("--batch-size", type=int, default=2)
-    parser.add_argument("--train-tokenizer", action="store_true")
 
     args = parser.parse_args()
 
     datamodule = IRModule.load()
     datamodule.batch_size = args.batch_size
 
-    if args.train_tokenizer:
-        train_tokenizer(datamodule)
     # datamodule = datamodule.submodule(ratio=100)
 
-    model = Model()
+    model = Model.from_tinybert()
 
     comet_logger = CometLogger(
         api_key=os.environ.get("COMET_API_KEY"),
@@ -228,13 +210,18 @@ def main():
         log_graph=False,
         log_code=False,
         log_env_details=False,
+        disabled=True,
     )
 
     key = comet_logger.experiment.get_key()
+    model.config.key = key
 
     callbacks = [
         ModelCheckpoint(
-            dirpath=MODELS_DIR, save_top_k=1, monitor="val_acc", filename=key,
+            dirpath=MODELS_DIR,
+            save_top_k=1,
+            monitor="val_acc",
+            filename=key,
         )
     ]
 
@@ -245,7 +232,7 @@ def main():
         logger=comet_logger,
         callbacks=callbacks,
         num_sanity_val_steps=0,
-        val_check_interval=250,
+        val_check_interval=10,
     )
 
     trainer.fit(model, datamodule=datamodule)

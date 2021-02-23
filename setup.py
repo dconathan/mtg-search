@@ -2,35 +2,23 @@ from setuptools import setup, find_packages
 from mtg_search.__version__ import __version__
 from mtg_search.constants import (
     MODEL_CHECKPOINT_PATH,
-    TOKENIZER_JSON,
-    INDEX,
     PACKAGE_DIR,
     HOME_HTML,
 )
 from mtg_search import logger
-
+import sys
 
 if not MODEL_CHECKPOINT_PATH.exists():
-    logger.warning(
-        f"{MODEL_CHECKPOINT_PATH} not found, there won't be a model as part of this package"
-    )
-
+    # develop will be in argv if we do e.g. `pip install -e .`
+    if "develop" not in sys.argv:
+        logger.error("can't build a non-development package with no model")
+        raise FileNotFoundError(MODEL_CHECKPOINT_PATH)
 
 setup(
     name="mtg-search",
     version=__version__,
     packages=find_packages(),
-    install_requires=[
-        "requests",
-        "tqdm",
-        "transformers",
-        "torch",
-        "rank-bm25",
-        "pytorch-lightning",
-        "comet-ml",
-        "fastapi",
-        "pydantic",
-    ],
+    install_requires=["tqdm", "fastapi", "pydantic", "mangum"],
     entry_points={
         "console_scripts": [
             "download-data=mtg_search.data.utils:download_data",
@@ -42,9 +30,7 @@ setup(
     },
     package_data={
         "mtg_search": [
-            str(INDEX.relative_to(PACKAGE_DIR)),
-            str(TOKENIZER_JSON.relative_to(PACKAGE_DIR)),
-            str(MODEL_CHECKPOINT_PATH.relative_to(PACKAGE_DIR)),
+            str(MODEL_CHECKPOINT_PATH.relative_to(PACKAGE_DIR) / "*"),
             str(HOME_HTML.relative_to(PACKAGE_DIR)),
         ]
     },

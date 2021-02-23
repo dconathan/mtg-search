@@ -5,8 +5,9 @@ from functools import lru_cache
 from fastapi import FastAPI
 from fastapi.responses import HTMLResponse
 from pydantic import BaseModel
+from mangum import Mangum
 
-from mtg_search.app.api import search
+from mtg_search.api.main import search
 from mtg_search.constants import HOME_HTML
 
 app = FastAPI()
@@ -36,3 +37,6 @@ def home():
     else:
         body = "not found :("
     return body
+
+
+handler = Mangum(app)

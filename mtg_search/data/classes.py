@@ -8,8 +8,6 @@ import pickle
 import logging
 from typing import List
 
-import torch
-
 from mtg_search.constants import PROCESSED_DATA_PICKLE
 
 logger = logging.getLogger(__name__)
@@ -78,4 +76,4 @@ class TrainBatch:
 @dataclass
 class Index:
     cards: List[Card]
-    vectors: torch.Tensor
+    vectors: "torch.Tensor"

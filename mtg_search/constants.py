@@ -6,7 +6,6 @@ PACKAGE_DIR = Path(__file__).parent.absolute()
 ARTIFACTS_DIR = PACKAGE_DIR / "artifacts"
 DATA_DIR = ARTIFACTS_DIR / "data"
 MODELS_DIR = ARTIFACTS_DIR / "models"
-WEBAPP_DIR = ARTIFACTS_DIR / "webapp"
 
 # data
 DATA_URL = "https://mtgjson.com/api/v5/AllPrintings.json"
@@ -16,15 +15,11 @@ DATA_MODULE_PICKLE = DATA_DIR / "module.pickle"
 PREPROCESSED_DIR = DATA_DIR / "preprocessed"
 
 # model
-TOKENIZER_JSON = MODELS_DIR / "tokenizer.json"
-MODEL_CHECKPOINT_NAME = os.environ.get("MODEL_CHECKPOINT", "model.ckpt")
-if not MODEL_CHECKPOINT_NAME.endswith(".ckpt"):
-    MODEL_CHECKPOINT_NAME += ".ckpt"
-MODEL_CHECKPOINT_PATH = MODELS_DIR / MODEL_CHECKPOINT_NAME
-
-# runtime
-INDEX = DATA_DIR / "index.torch"
-
+MODEL_CHECKPOINT = os.environ.get("MODEL_CHECKPOINT")
+if MODEL_CHECKPOINT:
+    MODEL_CHECKPOINT_PATH = MODELS_DIR / MODEL_CHECKPOINT
+else:
+    MODEL_CHECKPOINT_PATH = None
 
 # app
-HOME_HTML = WEBAPP_DIR / "index.html"
+HOME_HTML = PACKAGE_DIR / "api" / "index.html"

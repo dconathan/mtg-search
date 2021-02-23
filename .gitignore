@@ -1,7 +1,7 @@
 .idea/
 scratch/
 mtg_search/artifacts/
-!mtg_search/artifacts/webapp/index.html
+!mtg_search/api/index.html
 
 # Created by .ignore support plugin (hsz.mobi)
 ### Python template
