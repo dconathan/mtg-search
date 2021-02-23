@@ -1,0 +1,4 @@
+[core]
+    remote = artifacts
+['remote "artifacts"']
+    url = s3://mtg-search-artifacts
