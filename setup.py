@@ -5,6 +5,7 @@ from mtg_search.constants import (
     TOKENIZER_JSON,
     INDEX,
     PACKAGE_DIR,
+    HOME_HTML,
 )
 from mtg_search import logger
 
@@ -44,6 +45,7 @@ setup(
             str(INDEX.relative_to(PACKAGE_DIR)),
             str(TOKENIZER_JSON.relative_to(PACKAGE_DIR)),
             str(MODEL_CHECKPOINT_PATH.relative_to(PACKAGE_DIR)),
+            str(HOME_HTML.relative_to(PACKAGE_DIR)),
         ]
     },
 )

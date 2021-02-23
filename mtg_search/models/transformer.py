@@ -108,8 +108,8 @@ class Input:
 class Model(LightningModule):
     def __init__(self):
         super().__init__()
-        self.init_roberta()
-        # self.init_tinybert()
+        # self.init_roberta()
+        self.init_tinybert()
 
     def init_tinybert(self):
 

@@ -6,6 +6,7 @@ PACKAGE_DIR = Path(__file__).parent.absolute()
 ARTIFACTS_DIR = PACKAGE_DIR / "artifacts"
 DATA_DIR = ARTIFACTS_DIR / "data"
 MODELS_DIR = ARTIFACTS_DIR / "models"
+WEBAPP_DIR = ARTIFACTS_DIR / "webapp"
 
 # data
 DATA_URL = "https://mtgjson.com/api/v5/AllPrintings.json"
@@ -23,3 +24,7 @@ MODEL_CHECKPOINT_PATH = MODELS_DIR / MODEL_CHECKPOINT_NAME
 
 # runtime
 INDEX = DATA_DIR / "index.torch"
+
+
+# app
+HOME_HTML = WEBAPP_DIR / "index.html"
