@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>MTG Search</title>
+</head>
+<body>
+
+<input id="query" type="text">
+<button id="search">Search</button>
+
+<div id="cards"></div>
+
+</body>
+</html>
+<script>
+
+  searchButton = document.getElementById('search')
+  queryBox = document.getElementById('query')
+  cardsDiv = document.getElementById('cards')
+
+  runQuery = query => {
+
+    cardsDiv.innerHTML = ''
+
+    fetch('/search?q=' + query)
+      .then(r => r.json())
+      .then(r => {
+        for (let c of r.cards) {
+          cardDiv = document.createElement('div')
+          cardName = document.createElement('h4')
+          cardName.innerHTML = c.name
+          cardText = document.createElement('div')
+          cardText.innerHTML = c.text
+          cardDiv.append(cardName)
+          cardDiv.append(cardText)
+          cardsDiv.append(cardDiv)
+        }
+
+      })
+
+  }
+
+  searchButton.onclick = () => runQuery(queryBox.value)
+  queryBox.onkeyup = e => {
+    if (e.keyCode == 13) {
+      runQuery(queryBox.value)
+    }
+  }
+
+</script>
