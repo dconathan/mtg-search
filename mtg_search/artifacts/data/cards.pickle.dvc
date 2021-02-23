@@ -1,0 +1,4 @@
+outs:
+- md5: f75367423f85c63a795ac8ef7d13481c
+  size: 3896160
+  path: cards.pickle

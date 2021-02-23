@@ -1,0 +1,4 @@
+outs:
+- md5: ad8f2757d73925835e658b4a76589e24
+  size: 559
+  path: config.torch

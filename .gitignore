@@ -1,7 +1,16 @@
 .idea/
 scratch/
-mtg_search/artifacts/
-!mtg_search/api/index.html
+# ignore data files
+*.json
+*.pickle
+*.torch
+*.ckpt
+#mtg_search/artifacts/models/*
+#mtg_search/artifacts/data/*.pickle
+#mtg_search/artifacts/data/*.json
+#mtg_search/artifacts/data/preprocessed/*
+#!mtg_search/artifacts/data/preprocessed/*.dvc
+#!mtg_search/artifacts/**/*.dvc
 
 # Created by .ignore support plugin (hsz.mobi)
 ### Python template

@@ -1,0 +1,4 @@
+outs:
+- md5: 315e0f852b0167a767d8f7cde57dfaa6
+  size: 4003371
+  path: module.pickle
