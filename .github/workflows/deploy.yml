@@ -16,12 +16,12 @@ jobs:
         run: pip3 install pipenv
       - name: Install dependencies (including dev)
         run: pipenv sync --dev
-      - name: Download artifacts
+      - name: Download model artifacts
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           AWS_DEFAULT_REGION: us-east-1
-        run: dvc pull mtg_search/artifacts/models/$(mtg-search checkpoint)/*.dvc
+        run: dvc pull mtg_search/artifacts/models/$(pipenv run mtg-search checkpoint)/*.dvc
       - name: Run tests
         run: pipenv run pytest
 
