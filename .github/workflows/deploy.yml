@@ -9,12 +9,16 @@ jobs:
     steps:
       - uses: hashicorp/setup-terraform@v1
       - uses: actions/checkout@v2
-      - name: Set env to staging
-        if: endsWith(github.ref, '/main')
-        run: echo "ENVIRONMENT=sbx" >> $ENVIRONMENT
-      - name: Set env to production
-        if: endsWith(github.ref, '/prod')
-        run: echo "ENVIRONMENT=prod" >> $ENVIRONMENT
+
+      - uses: haya14busa/action-cond@v1
+        id: env
+        with:
+          cond: endsWith(github.ref, '/prod')
+          if_true: "prod"
+          if_false: "sbx"
+      - name: Use conditional value
+    run: echo "${{ steps.env.outputs.value }}"
+
       - name: Set up Python
         uses: actions/setup-python@v2
         with:
@@ -47,13 +51,13 @@ jobs:
         with:
           context: .
           push: true
-          tags: 347651660649.dkr.ecr.us-east-1.amazonaws.com/mtg-search:${{ steps.version.outputs.version }}-$ENVIRONMENT
+          tags: 347651660649.dkr.ecr.us-east-1.amazonaws.com/mtg-search:${{ steps.version.outputs.version }}-${{ steps.env.outputs.value }}
       - name: Terraform init
         working-directory: infra
         run: terraform init
       - name: Terraform plan
         working-directory: infra
-        run: terraform plan -var="environment=$ENVIRONMENT"
+        run: terraform plan -var="environment=${{ steps.env.outputs.value }}"
       - name: Terraform apply
         working-directory: infra
-        run: terraform apply -auto-approve -var="environment=$ENVIRONMENT"
+        run: terraform apply -auto-approve -var="environment=${{ steps.env.outputs.value }}"
