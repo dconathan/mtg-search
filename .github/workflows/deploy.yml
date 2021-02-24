@@ -7,6 +7,7 @@ jobs:
     name: Run tests, build package, build image, deploy
     runs-on: ubuntu-latest
     steps:
+      - uses: hashicorp/setup-terraform@v1
       - uses: actions/checkout@v2
       - name: Set up Python
         uses: actions/setup-python@v2
@@ -41,3 +42,12 @@ jobs:
           context: .
           push: true
           tags: 347651660649.dkr.ecr.us-east-1.amazonaws.com/mtg-search:${{ steps.version.outputs.version }}
+      - name: Terraform init
+        working-directory: infra
+        run: terraform init
+      - name: Terraform plan
+        working-directory: infra
+        run: terraform plan
+      - name: Terraform apply
+        working-directory: infra
+        run: terraform apply
