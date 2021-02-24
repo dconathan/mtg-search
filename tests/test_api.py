@@ -19,9 +19,7 @@ def test_load_c_encoder():
 def test_load_index():
     index = main.load_index()
     assert isinstance(index, Index)
-    cards = Cards.load()
-    assert len(index.cards) == len(cards)
-    assert index.vectors.shape[0] == len(cards)
+    assert index.vectors.shape[0] == len(index.cards)
 
 
 def test_search():
