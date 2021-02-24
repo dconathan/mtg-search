@@ -4,7 +4,7 @@ on: push
 
 jobs:
   test:
-    name: Run tests
+    name: Run tests and build package
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
@@ -12,18 +12,16 @@ jobs:
         uses: actions/setup-python@v2
         with:
           python-version: "3.8"
-      - name: AWS Test
+      - name: Install pipenv
+        run: pip3 install pipenv
+      - name: Install dependencies (including dev)
+        run: pipenv sync --dev
+      - name: Download artifacts
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           AWS_DEFAULT_REGION: us-east-1
-        run: |
-          pip3 install awscli
-          aws s3 ls
-      - name: Install pipenv
-        run: pip3 install pipenv
-      - name: Install dependecies (including dev)
-        run: pipenv sync --dev
+        run: dvc pull mtg_search/artifacts/models/$(mtg-search checkpoint)/*.dvc
       - name: Run tests
         run: pipenv run pytest
 

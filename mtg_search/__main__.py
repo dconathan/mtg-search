@@ -1,4 +1,5 @@
 import argparse
+import sys
 
 
 parser = argparse.ArgumentParser()
@@ -19,13 +20,21 @@ def main():
             print(c.name)
             print(c.text)
             print()
+        sys.exit(0)
+
     if args.command == "index":
         from mtg_search.api import create_index
-
         create_index()
+        sys.exit(0)
+
+    if args.command == "checkpoint":
+        from mtg_search.checkpoint import CHECKPOINT
+        print(CHECKPOINT)
+        sys.exit(0)
+
     else:
         print("unknown command")
-
+        sys.exit(1)
 
 if __name__ == "__main__":
     main()

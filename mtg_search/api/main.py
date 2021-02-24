@@ -47,8 +47,8 @@ def search(query: str, top=10) -> List[Card]:
 def create_index() -> Index:
     import torch
 
-    cards = Cards.load()
     model = load_c_encoder()
+    cards = Cards.load()
     vectors = model.create_index([c.text for c in cards])
     index = Index(cards=cards, vectors=vectors)
     index_path = MODEL_CHECKPOINT_PATH / "index.torch"

@@ -9,6 +9,7 @@ mtg-search = {editable = true, path = "."}
 [dev-packages]
 pytest = "*"
 ipython = "*"
+dvc = {extras = ["s3"], version = "*"}
 
 [requires]
 python_version = "3.8"
