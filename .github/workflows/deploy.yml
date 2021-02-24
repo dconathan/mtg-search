@@ -44,7 +44,11 @@ jobs:
           python-versions: "cp38-cp38"
       - name: ECR Login
         uses: aws-actions/amazon-ecr-login@v1
+      - name: Check if image exists
+        id: image_check
+        run: (aws ecr describe-images --repository-name=mtg-search --image-ids=imageTag=${{ steps.version.outputs.version }}-${{ steps.env.outputs.value }} &> /dev/null && echo "::set-output name=exists::true") || echo "::set-output name=exists::false"
       - name: Build and push Docker image
+        if: ${{ steps.image_check.outputs.exists }} == "false"
         uses: docker/build-push-action@v2
         with:
           context: .
@@ -64,11 +68,10 @@ jobs:
         run: |
           terraform workspace select ${{ steps.env.outputs.value }}
           terraform apply -auto-approve
-          ENDPOINT=$(terraform output -raw endpoint)
-          echo $ENDPOINT
-          echo "::set-output name=endpoint::$ENDPOINT"
       - name: Test endpoint
+        working-directory: infra
         run: |
-          echo ${{ steps.tf_apply.outputs.endopint }}
-          curl ${{ steps.tf_apply.outputs.endpoint }}
-          curl ${{ steps.tf_apply.outputs.endpoint }}/search?q=hello
+          terraform workspace select ${{ steps.env.outputs.value }}
+          echo $(terraform output -raw endpoint)
+          curl $(terraform output -raw endpoint)
+          curl $(terraform output -raw endpoint)/search?q=hello
