@@ -23,7 +23,7 @@ jobs:
         run: pip3 install pipenv
       - name: Install dependencies (including dev)
         run: |
-          pipenv run pip install torch==1.7.1+cpu -f https://download.pytorch.org/whl/torch_stable.html
+          export PIP_FIND_LINKS=https://download.pytorch.org/whl/torch_stable.html  # need for torch cpu whl
           pipenv sync --dev
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v1
