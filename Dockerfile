@@ -1,6 +1,6 @@
 FROM public.ecr.aws/lambda/python:3.8
 
-RUN pip install -v torch==1.7.1+cpu -f https://download.pytorch.org/whl/torch_stable.html
+RUN pip install torch==1.7.1+cpu -f https://download.pytorch.org/whl/torch_stable.html
 RUN pip install transformers fastapi pydantic mangum pytorch-lightning
 
 COPY dist/* .
