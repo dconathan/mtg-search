@@ -51,7 +51,9 @@ resource "aws_api_gateway_deployment" "this" {
   rest_api_id = aws_api_gateway_rest_api.this.id
   stage_name  = terraform.workspace
 
-  stage_description = md5(file("${path.module}/apigateway.tf")) # forces replacement if this file changes
+  variables = {
+    deployed_at = timestamp()  # forces new deployment
+  }
 
 }
 
