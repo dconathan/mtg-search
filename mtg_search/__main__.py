@@ -10,6 +10,12 @@ parser.add_argument("args", nargs="*")
 def main():
     args = parser.parse_args()
 
+    if args.command == "version":
+        from mtg_search.version import __version__
+
+        print(__version__)
+        sys.exit(0)
+
     if args.command == "search":
         from mtg_search.api import search
 

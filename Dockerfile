@@ -5,6 +5,6 @@ RUN pip install transformers fastapi pydantic mangum pytorch-lightning
 
 COPY dist/* .
 
-RUN pip install mtg_search-0.2.1-py3-none-any.whl
+RUN pip install *.whl
 
 CMD ["mtg_search.api.app.handler"]

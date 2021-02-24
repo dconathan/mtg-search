@@ -26,14 +26,18 @@ jobs:
         run: pipenv run dvc pull mtg_search/artifacts/models/$(pipenv run mtg-search checkpoint)/*.dvc
       - name: Run tests
         run: pipenv run pytest
+      - name: Get version
+        id: version
+        run: echo "::set-output name=version::$(pipenv run mtg-search version)"
       - name: Build package
         uses: RalfG/python-wheels-manylinux-build@v0.3.3
         with:
           python-versions: "cp38-cp38"
       - name: ECR Login
         uses: aws-actions/amazon-ecr-login@v1
-      - name: Build and push
+      - name: Build and push Docker image
         uses: docker/build-push-action@v2
         with:
+          context: .
           push: true
-          tags: 347651660649.dkr.ecr.us-east-1.amazonaws.com/mtg-search
+          tags: 347651660649.dkr.ecr.us-east-1.amazonaws.com/mtg-search:${{ steps.version.outputs.version }}
