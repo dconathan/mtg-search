@@ -64,8 +64,11 @@ jobs:
         run: |
           terraform workspace select ${{ steps.env.outputs.value }}
           terraform apply -auto-approve
-          echo "::set-output name=endpoint::$(terraform output -raw endpoint)"
+          ENDPOINT=$(terraform output -raw endpoint)
+          echo $ENDPOINT
+          echo "::set-output name=endpoint::$ENDPOINT"
       - name: Test endpoint
         run: |
+          echo ${{ steps.tf_apply.outputs.endopint }}
           curl ${{ steps.tf_apply.outputs.endpoint }}
           curl ${{ steps.tf_apply.outputs.endpoint }}/search?q=hello
