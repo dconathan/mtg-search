@@ -1,0 +1,18 @@
+name: Deploy
+
+on: push
+
+jobs:
+  test:
+    name: Run tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2 # Checking out the repo
+
+      - name: Install dependecies
+        uses: VaultVulp/action-pipenv@v2.0.1
+        with:
+          command: sync --dev
+
+      - name: Run tests
+        run: pytest

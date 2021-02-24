@@ -12,9 +12,12 @@ provider "aws" {
 
 resource "aws_lambda_function" "example" {
   function_name = "mtg-search"
-  image_uri = "${data.aws_caller_identity.current.account_id}.dkr.ecr.us-east-1.amazonaws.com/mtg-search:latest"
-  package_type = "Image"
-  role = aws_iam_role.lambda_exec.arn
+  image_uri     = "${data.aws_caller_identity.current.account_id}.dkr.ecr.us-east-1.amazonaws.com/mtg-search:latest"
+  package_type  = "Image"
+  role          = aws_iam_role.lambda_exec.arn
+
+  timeout     = 60
+  memory_size = 1024
 
 }
 
@@ -41,13 +44,13 @@ resource "aws_iam_role" "lambda_exec" {
 }
 
 resource "aws_lambda_permission" "allow_apigw" {
-  action = "lambda:InvokeFunction"
+  action        = "lambda:InvokeFunction"
   function_name = aws_lambda_function.example.function_name
-  principal = "apigateway.amazonaws.com"
+  principal     = "apigateway.amazonaws.com"
 }
 
 resource "aws_api_gateway_rest_api" "example" {
-  name        = "mtg-search-apigw"
+  name = "mtg-search-apigw"
 }
 
 resource "aws_api_gateway_resource" "proxy" {

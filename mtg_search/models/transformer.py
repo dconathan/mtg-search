@@ -3,10 +3,12 @@ import os
 from typing import List
 import logging
 import argparse
-import json
 from pathlib import Path
 
-import comet_ml
+try:
+    import comet_ml
+except:
+    pass
 import torch
 from tqdm import tqdm
 from pytorch_lightning import LightningModule, Trainer

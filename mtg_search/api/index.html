@@ -23,7 +23,7 @@
 
     cardsDiv.innerHTML = ''
 
-    fetch('/search?q=' + query)
+    fetch('search?q=' + query)
       .then(r => r.json())
       .then(r => {
         for (let c of r.cards) {

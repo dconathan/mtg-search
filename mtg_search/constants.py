@@ -1,5 +1,5 @@
 from pathlib import Path
-import os
+from mtg_search.checkpoint import CHECKPOINT
 
 # local directories
 PACKAGE_DIR = Path(__file__).parent.absolute()
@@ -15,11 +15,7 @@ DATA_MODULE_PICKLE = DATA_DIR / "module.pickle"
 PREPROCESSED_DIR = DATA_DIR / "preprocessed"
 
 # model
-MODEL_CHECKPOINT = os.environ.get("MODEL_CHECKPOINT")
-if MODEL_CHECKPOINT:
-    MODEL_CHECKPOINT_PATH = MODELS_DIR / MODEL_CHECKPOINT
-else:
-    MODEL_CHECKPOINT_PATH = None
+MODEL_CHECKPOINT_PATH = MODELS_DIR / CHECKPOINT
 
 # app
 HOME_HTML = PACKAGE_DIR / "api" / "index.html"

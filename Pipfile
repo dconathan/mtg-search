@@ -7,6 +7,8 @@ name = "pypi"
 mtg-search = {editable = true, path = "."}
 
 [dev-packages]
+pytest = "*"
+ipython = "*"
 
 [requires]
 python_version = "3.8"

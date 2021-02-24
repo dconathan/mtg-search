@@ -8,11 +8,10 @@ from pathlib import Path
 from hashlib import md5
 
 from pytorch_lightning import LightningDataModule
-from rank_bm25 import BM25Okapi
 from torch.utils.data import Dataset
 from torch.utils.data.dataloader import DataLoader
 
-from mtg_search.data.classes import Card, Cards, Sample, TrainSample, TrainBatch
+from mtg_search.data.classes import Cards, Sample, TrainSample, TrainBatch
 from mtg_search.constants import DATA_MODULE_PICKLE, PREPROCESSED_DIR
 
 import random
@@ -117,13 +116,21 @@ class IRDataset(Dataset):
         self.samples = samples
         self._samples = []
         self.corpus = corpus
-        self.index = BM25Okapi(corpus)
+        self._index = None
         if neg_sampling < 2:
             logger.warning(
                 "neg_sampling for IRDataset should be at least 2, setting to 2"
             )
             neg_sampling = 2
         self.neg_sampling = neg_sampling
+
+    @property
+    def index(self):
+        from rank_bm25 import BM25Okapi
+
+        if self._index is None:
+            self._index = BM25Okapi(self.corpus)
+        return self._index
 
     @property
     def preprocessed_filename(self) -> Path:
