@@ -12,7 +12,7 @@ provider "aws" {
 
 resource "aws_lambda_function" "example" {
   function_name = "mtg-search-${local.slug}-${var.environment}"
-  image_uri     = "${data.aws_caller_identity.current.account_id}.dkr.ecr.us-east-1.amazonaws.com/mtg-search:${local.version}-${var.environment}}"
+  image_uri     = "${data.aws_caller_identity.current.account_id}.dkr.ecr.us-east-1.amazonaws.com/mtg-search:${local.version}-${var.environment}"
   package_type  = "Image"
   role          = aws_iam_role.lambda_exec.arn
 

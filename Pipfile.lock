@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "e733d1b8a19cd5bbd6a37835366c2a6921717ea1e0d5c3252d73872b86cafb31"
+            "sha256": "acd679eb0d1baa56724e32026be78af4f200a8dcf5104fbe6f25862f5b7c7567"
         },
         "pipfile-spec": 6,
         "requires": {
@@ -611,21 +611,17 @@
         },
         "torch": {
             "hashes": [
-                "sha256:2e49cac969976be63117004ee00d0a3e3dd4ea662ad77383f671b8992825de1a",
-                "sha256:38d67f4fb189a92a977b2c0a38e4f6dd413e0bf55aa6d40004696df7e40a71ff",
-                "sha256:422e64e98d0e100c360993819d0307e5d56e9517b26135808ad68984d577d75a",
-                "sha256:5d76c255a41484c1d41a9ff570b9c9f36cb85df9428aa15a58ae16ac7cfc2ea6",
-                "sha256:6652a767a0572ae0feb74ad128758e507afd3b8396b6e7f147e438ba8d4c6f63",
-                "sha256:a3793dcceb12b1e2281290cca1277c5ce86ddfd5bf044f654285a4d69057aea7",
-                "sha256:af464a6f4314a875035e0c4c2b07517599704b214634f4ed3ad2e748c5ef291f",
-                "sha256:d241c3f1c4d563e4ba86f84769c23e12606db167ee6f674eedff6d02901462e3",
-                "sha256:dd2fc6880c95e836960d86efbbc7f63d3287f2e1893c51d31f96dbfe02f0d73e",
-                "sha256:de84b4166e3f7335eb868b51d3bbd909ec33828af27290b4171bce832a55be3c",
-                "sha256:e000b94be3aa58ad7f61e7d07cf379ea9366cf6c6874e68bd58ad0bdc537b3a7",
-                "sha256:f0aaf657145533824b15f2fd8fde8f8c67fe6c6281088ef588091f03fad90243"
+                "sha256:445c5ff49964a3cdd8170a20a7371e3691412e2e4a7005f9c89c485ab47e8609",
+                "sha256:5a478f430a06f7c3165f704e0ed083ba772453f67c017b7489fccf97e04b4e18",
+                "sha256:83fbf9f33e07ad2bc470abb9f80f742928cc39e2c0a95c8b330c5ea8c735b995",
+                "sha256:a299319adcc927ec9547baa05f91f1c16295caedaa13f272a663c06ee2bb8903",
+                "sha256:c4794f43a6b84c96c16b84f2815abab52634f966d6e016caac398357cbdd8077",
+                "sha256:e34c5bfb82d16786f9ee34d3666b23d600bed1ec031e11a8745a9122ac44f1ff",
+                "sha256:fd21e51f6e261e5b44cc7c05a197763f3946dede8ab97dc773126eb1a3b798a1",
+                "sha256:fe1a8cde36c5aea341724b08fc9e6854d9edc04974fd16e5bb3ff238f76a6764"
             ],
-            "markers": "python_full_version >= '3.6.2'",
-            "version": "==1.7.1"
+            "index": "pypi",
+            "version": "==1.7.1+cpu"
         },
         "tqdm": {
             "hashes": [
@@ -1198,7 +1194,7 @@
                 "sha256:1f7c481be658eb27f451c3f714aec5bc1fc2431c28f89848ef589c2392171f2e",
                 "sha256:86a157008d17c73ee03da80de91e09fc2f7713109ccd4e90496eeb3702bef638"
             ],
-            "markers": "python_version >= '3.6' and python_version < '4'",
+            "markers": "python_version >= '3.6' and python_version < '4.0'",
             "version": "==9.11.1"
         },
         "ruamel.yaml": {

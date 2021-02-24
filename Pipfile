@@ -5,6 +5,7 @@ name = "pypi"
 
 [packages]
 mtg-search = {editable = true, path = "."}
+torch = "==1.7.1+cpu"
 
 [dev-packages]
 pytest = "*"
