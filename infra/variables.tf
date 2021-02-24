@@ -1,13 +1,8 @@
 
-variable "environment" {
-  type        = string
-  default     = "sbx"
-  description = "The environment to deploy to (sbx, prod, ...)"
-}
-
 locals {
-  version = regex("\\d+.\\d+.\\d+", file("${path.module}/../mtg_search/version.py"))
-  slug    = replace(local.version, ".", "-")
+  # load and extract version from mtg_search.version
+  version = regex("\\d+.\\d+.\\d+", file("${path.module}/../mtg_search/version.py")) # e.g. 0.1.2
+  slug    = replace(local.version, ".", "-")                                         # e.g. 0-1-2
 }
 
 output "version" {

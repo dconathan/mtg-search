@@ -1,18 +1,9 @@
-terraform {
-  required_providers {
-    aws = {
-      source = "hashicorp/aws"
-    }
-  }
-}
 
-provider "aws" {
-  region = "us-east-1"
-}
+
 
 resource "aws_lambda_function" "this" {
-  function_name = "mtg-search-${local.slug}-${var.environment}"
-  image_uri     = "${data.aws_caller_identity.current.account_id}.dkr.ecr.us-east-1.amazonaws.com/mtg-search:${local.version}-${var.environment}"
+  function_name = "mtg-search-${local.slug}-${terraform.workspace}"
+  image_uri     = "${data.aws_caller_identity.current.account_id}.dkr.ecr.us-east-1.amazonaws.com/mtg-search:${local.version}-${terraform.workspace}"
   package_type  = "Image"
   role          = aws_iam_role.lambda.arn
 
@@ -23,7 +14,7 @@ resource "aws_lambda_function" "this" {
 
 resource "aws_iam_role" "lambda" {
 
-  name = "mtg-search-${var.environment}-r"
+  name = "mtg-search-${terraform.workspace}-r"
 
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
@@ -47,60 +38,3 @@ resource "aws_lambda_permission" "this" {
   principal     = "apigateway.amazonaws.com"
 }
 
-resource "aws_api_gateway_rest_api" "this" {
-  name = "mtg-search-apigw"
-}
-
-resource "aws_api_gateway_resource" "proxy" {
-  rest_api_id = aws_api_gateway_rest_api.this.id
-  parent_id   = aws_api_gateway_rest_api.this.root_resource_id
-  path_part   = "{proxy+}"
-}
-
-resource "aws_api_gateway_method" "proxy" {
-  rest_api_id   = aws_api_gateway_rest_api.this.id
-  resource_id   = aws_api_gateway_resource.proxy.id
-  http_method   = "ANY"
-  authorization = "NONE"
-}
-
-resource "aws_api_gateway_integration" "proxy" {
-  rest_api_id = aws_api_gateway_rest_api.this.id
-  resource_id = aws_api_gateway_method.proxy.resource_id
-  http_method = aws_api_gateway_method.proxy.http_method
-
-  integration_http_method = "POST"
-  type                    = "AWS_PROXY"
-  uri                     = aws_lambda_function.this.invoke_arn
-}
-
-resource "aws_api_gateway_method" "root" {
-  rest_api_id   = aws_api_gateway_rest_api.this.id
-  resource_id   = aws_api_gateway_rest_api.this.root_resource_id
-  http_method   = "ANY"
-  authorization = "NONE"
-}
-
-resource "aws_api_gateway_integration" "root" {
-  rest_api_id = aws_api_gateway_rest_api.this.id
-  resource_id = aws_api_gateway_method.root.resource_id
-  http_method = aws_api_gateway_method.root.http_method
-
-  integration_http_method = "POST"
-  type                    = "AWS_PROXY"
-  uri                     = aws_lambda_function.this.invoke_arn
-}
-
-resource "aws_api_gateway_deployment" "this" {
-  depends_on = [
-    aws_api_gateway_integration.proxy,
-    aws_api_gateway_integration.root,
-  ]
-
-  rest_api_id = aws_api_gateway_rest_api.this.id
-  stage_name  = var.environment
-}
-
-output "base_url" {
-  value = aws_api_gateway_deployment.this.invoke_url
-}

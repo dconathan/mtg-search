@@ -55,7 +55,11 @@ jobs:
         run: terraform init
       - name: Terraform plan
         working-directory: infra
-        run: terraform plan -var="environment=${{ steps.env.outputs.value }}"
+        run: |
+          terraform workspace select ${{ steps.env.outputs.value }}
+          terraform plan
       - name: Terraform apply
         working-directory: infra
-        run: terraform apply -auto-approve -var="environment=${{ steps.env.outputs.value }}"
+        run: |
+          terraform workspace select ${{ steps.env.outputs.value }}
+          terraform apply -auto-approve
