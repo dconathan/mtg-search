@@ -9,16 +9,12 @@ jobs:
     steps:
       - uses: hashicorp/setup-terraform@v1
       - uses: actions/checkout@v2
-
       - uses: haya14busa/action-cond@v1
         id: env
         with:
           cond: endsWith(github.ref, '/prod')
           if_true: "prod"
           if_false: "sbx"
-      - name: Use conditional value
-    run: echo "${{ steps.env.outputs.value }}"
-
       - name: Set up Python
         uses: actions/setup-python@v2
         with:
