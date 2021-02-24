@@ -12,7 +12,7 @@ jobs:
       - uses: haya14busa/action-cond@v1
         id: env
         with:
-          cond: ${{ endsWith(github.ref, "/prod") }}
+          cond: ${{ endsWith($GITHUB_REF, "/prod") }}
           if_true: "prod"
           if_false: "sbx"
       - name: Check Env
