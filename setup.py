@@ -27,7 +27,7 @@ setup(
         "torch",
         "pytorch-lightning",
     ],
-    extras_require={"train": ["comet-ml"]},
+    extras_require={"train": ["comet-ml", "rank-bm25"]},
     entry_points={
         "console_scripts": [
             "mtg-search=mtg_search.__main__:main",
