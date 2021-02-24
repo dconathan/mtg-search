@@ -1,5 +1,5 @@
 resource "aws_cloudwatch_log_group" "this" {
-  name              = "/aws/lambda/mtg-search-${terraform.workspace}"
+  name              = "/aws/lambda/mtg-search-${local.slug}-${terraform.workspace}"
   retention_in_days = 1
 }
 
