@@ -48,7 +48,7 @@ jobs:
         id: image_check
         run: (aws ecr describe-images --repository-name=mtg-search --image-ids=imageTag=${{ steps.version.outputs.version }}-${{ steps.env.outputs.value }} &> /dev/null && echo "::set-output name=exists::true") || echo "::set-output name=exists::false"
       - name: Build and push Docker image
-        if: ${{ steps.image_check.outputs.exists }} == "false"
+        if: ${{ steps.image_check.outputs.exists }} == false
         uses: docker/build-push-action@v2
         with:
           context: .
@@ -68,10 +68,12 @@ jobs:
         run: |
           terraform workspace select ${{ steps.env.outputs.value }}
           terraform apply -auto-approve
-      - name: Test endpoint
+      - name: Terraform get endpoint
+        id: tf_endpoint
         working-directory: infra
+        run: terraform output -raw endpoint
+      - name: Test endpoint
         run: |
-          terraform workspace select ${{ steps.env.outputs.value }}
-          echo $(terraform output -raw endpoint)
-          curl $(terraform output -raw endpoint)
-          curl $(terraform output -raw endpoint)/search?q=hello
+          echo ${{ steps.tf_endpoint.outputs.stdout }}
+          curl ${{ steps.tf_endpoint.outputs.stdout }}
+          curl ${{ steps.tf_endpoint.outputs.stdout }}/search?q=hello
