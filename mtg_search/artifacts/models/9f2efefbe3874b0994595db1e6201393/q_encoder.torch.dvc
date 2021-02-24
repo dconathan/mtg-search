@@ -1,0 +1,4 @@
+outs:
+- md5: f86800392d078007ff7f0fecda094bae
+  size: 17570711
+  path: q_encoder.torch

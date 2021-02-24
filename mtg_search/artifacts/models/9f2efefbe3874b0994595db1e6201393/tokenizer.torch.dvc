@@ -1,0 +1,4 @@
+outs:
+- md5: b0595b5c79f71f5c48164b60c036c2ac
+  size: 472879
+  path: tokenizer.torch
