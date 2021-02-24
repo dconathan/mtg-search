@@ -1,5 +1,5 @@
 resource "aws_cloudwatch_log_group" "example" {
-  name              = "/aws/lambda/mtg-search"
+  name              = "/aws/lambda/mtg-search-${var.environment}"
   retention_in_days = 1
 }
 
