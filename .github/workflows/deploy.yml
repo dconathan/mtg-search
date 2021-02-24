@@ -6,12 +6,12 @@ jobs:
   test:
     name: Run tests
     runs-on: ubuntu-latest
-    steps:
-      - name: Install Python 3.8 and pipenv
-        run: |
-          sudo apt-get update -y
-          sudo apt-get install python3.8 python3-pip -y
-          pip3 install --user pipenv
+   steps:
+      - uses: actions/setup-python@v2
+        with:
+          python-version: "3.8"
+      - name: Install pipenv
+        run: pip3 install pipenv
 
       - uses: actions/checkout@v2 # Checking out the repo
 
