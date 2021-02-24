@@ -72,5 +72,6 @@ jobs:
         run: terraform output -raw endpoint
       - name: Test endpoint
         run: |
+          sleep 5  # endpoint needs a few seconds before it is ready
           curl ${{ steps.tf_endpoint.outputs.stdout }}
           curl ${{ steps.tf_endpoint.outputs.stdout }}/search?q=hello
