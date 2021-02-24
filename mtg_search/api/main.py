@@ -13,6 +13,8 @@ logger = logging.getLogger(__name__)
 def load_q_encoder():
     from mtg_search.models.transformer import Model
 
+    logger.info(f"loading q_encoder from {MODEL_CHECKPOINT_PATH}")
+
     return Model.from_checkpoint_dir(MODEL_CHECKPOINT_PATH, q_only=True)
 
 
@@ -20,12 +22,16 @@ def load_q_encoder():
 def load_c_encoder():
     from mtg_search.models.transformer import Model
 
+    logger.info(f"loading c_encoder from {MODEL_CHECKPOINT_PATH}")
+
     return Model.from_checkpoint_dir(MODEL_CHECKPOINT_PATH, c_only=True)
 
 
 @lru_cache(1)
 def load_index() -> Index:
     import torch
+
+    logger.info(f"loading index from {MODEL_CHECKPOINT_PATH}")
 
     index_path = MODEL_CHECKPOINT_PATH / "index.torch"
     if not index_path.exists():

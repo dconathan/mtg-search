@@ -10,6 +10,7 @@ torch = "==1.7.1+cpu"
 [dev-packages]
 pytest = "*"
 ipython = "*"
+uvicorn = "*"
 dvc = {extras = ["s3"], version = "*"}
 
 [requires]

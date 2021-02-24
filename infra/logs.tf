@@ -1,10 +1,10 @@
-resource "aws_cloudwatch_log_group" "example" {
+resource "aws_cloudwatch_log_group" "this" {
   name              = "/aws/lambda/mtg-search-${var.environment}"
   retention_in_days = 1
 }
 
-resource "aws_iam_policy" "lambda_logging" {
-  name        = "lambda_logging-${var.environment}"
+resource "aws_iam_policy" "logging" {
+  name        = "lambda-logging-${var.environment}-p"
   path        = "/"
   description = "IAM policy for logging from a lambda"
 
@@ -26,6 +26,6 @@ resource "aws_iam_policy" "lambda_logging" {
 }
 
 resource "aws_iam_role_policy_attachment" "lambda_logs" {
-  role       = aws_iam_role.lambda_exec.name
-  policy_arn = aws_iam_policy.lambda_logging.arn
+  role       = aws_iam_role.lambda.name
+  policy_arn = aws_iam_policy.logging.arn
 }
