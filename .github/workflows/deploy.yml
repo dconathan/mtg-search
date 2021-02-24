@@ -9,9 +9,9 @@ jobs:
     steps:
       - name: Install Python 3.8 and pipenv
         run: |
-          apt-get update -y
-          apt-get install python3.8 python3-pip -y
-          pip3 install pipenv
+          sudo apt-get update -y
+          sudo apt-get install python3.8 python3-pip -y
+          pip3 install --user pipenv
 
       - uses: actions/checkout@v2 # Checking out the repo
 
