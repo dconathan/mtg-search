@@ -4,11 +4,14 @@ from typing import List
 import logging
 import argparse
 from pathlib import Path
+import uuid
 
 try:
     import comet_ml
-except:
-    pass
+    COMET_INSTALLED = True
+except ImportError:
+    COMET_INSTALLED = False
+
 import torch
 from tqdm import tqdm
 from pytorch_lightning import LightningModule, Trainer
@@ -202,20 +205,23 @@ def main():
     datamodule = IRModule.load()
     datamodule.batch_size = args.batch_size
 
-    # datamodule = datamodule.submodule(ratio=100)
-
     model = Model.from_tinybert()
 
-    comet_logger = CometLogger(
-        api_key=os.environ.get("COMET_API_KEY"),
-        experiment_name="mtg-search",
-        log_graph=False,
-        log_code=False,
-        log_env_details=False,
-        disabled=True,
-    )
+    if COMET_INSTALLED:
+        comet_logger = CometLogger(
+            api_key=os.environ.get("COMET_API_KEY"),
+            experiment_name="mtg-search",
+            log_graph=False,
+            log_code=False,
+            log_env_details=False,
+            disabled=True,
+        )
+        comet_logger.log_hyperparams(asdict(model.config))
+        key = comet_logger.experiment.get_key()
+    else:
+        key = uuid.uuid4().hex
+        comet_logger = True  # to pass logger=True to Trainer
 
-    key = comet_logger.experiment.get_key()
     model.config.key = key
 
     callbacks = [
@@ -227,8 +233,6 @@ def main():
         )
     ]
 
-    comet_logger.log_hyperparams(asdict(model.config))
-
     trainer = Trainer.from_argparse_args(
         args,
         logger=comet_logger,
@@ -239,3 +243,7 @@ def main():
 
     trainer.fit(model, datamodule=datamodule)
     trainer.test(model, datamodule=datamodule)
+
+
+if __name__ == "__main__":
+    main()

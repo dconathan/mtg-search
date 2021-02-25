@@ -110,9 +110,6 @@ RNG = random.Random(615)
 
 class IRDataset(Dataset):
     def __init__(self, samples: List[Sample], corpus: List[str], neg_sampling: int = 2):
-        """
-        TODO docstring
-        """
         self.samples = samples
         self._samples = []
         self.corpus = corpus
@@ -140,7 +137,7 @@ class IRDataset(Dataset):
         return PREPROCESSED_DIR / f"{uid}.pickle"
 
     @property
-    def preprocessed(self):
+    def preprocessed(self) -> bool:
         return len(self) == len(self._samples)
 
     def preprocess(self):
@@ -160,7 +157,7 @@ class IRDataset(Dataset):
         with self.preprocessed_filename.open("wb") as f:
             pickle.dump(self._samples, f)
 
-    def __getitem__(self, item):
+    def __getitem__(self, item) -> TrainSample:
 
         if self.preprocessed:
             return self._samples[item]

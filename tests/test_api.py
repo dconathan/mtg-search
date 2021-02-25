@@ -1,6 +1,6 @@
 from mtg_search.api import main
 from mtg_search.models.transformer import Model
-from mtg_search.data.classes import Index, Cards, Card
+from mtg_search.data.classes import Index, Card
 from transformers import BertModel
 
 

@@ -1,6 +1,5 @@
 """
 if schemas of these classes change, data will need to be re-processed
-TODO list exact steps
 """
 from __future__ import annotations
 from dataclasses import dataclass, field
